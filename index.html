@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Parallel Ages</title>
+  <title>Parallel Ages & Albums</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -23,8 +23,14 @@
     }
     .norah { color: #d63384; }
     .cameron { color: #2a6fdb; }
+    .album-group {
+      margin-top: 1.5em;
+    }
+    .album-group h3 {
+      margin-bottom: 0.5em;
+      color: #444;
+    }
     .links {
-      margin-top: 1em;
       display: flex;
       flex-direction: column;
       gap: 0.4em;
@@ -33,25 +39,24 @@
       color: #2a6fdb;
       text-decoration: none;
       font-size: 1em;
-      white-space: nowrap; /* prevent wrapping */
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     a:hover { text-decoration: underline; }
-    @media (min-width: 600px) {
-      .result { font-size: 1.1em; }
-      a { font-size: 1em; }
-    }
   </style>
 </head>
 <body>
   <div class="result" id="result"></div>
+  <div id="album-links"></div>
 
   <script>
     const cameronBirth = new Date("2022-03-18");
     const norahBirth = new Date("2024-01-19");
 
-    const basePersonLink = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwUFh6VlZVOHJDRTdKR2tJSkpNVlktSXFrYXUyNmI5bjZnKMK8ydajMw%3D%3D";
+    // Album base links
+    const aaronsAlbum = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwUFh6VlZVOHJDRTdKR2tJSkpNVlktSXFrYXUyNmI5bjZnKOyhiNijMw%3D%3D";
+    const kristinsAlbum = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwTXBEUkJwWGVVMUpzWHJfMHZtRFZCN3RPc2Z4T1U4ZmFZKOeE3dejMw%3D%3D";
 
     function calculateAgeYrMo(birth, today) {
       let years = today.getFullYear() - birth.getFullYear();
@@ -66,22 +71,46 @@
       return d.toLocaleDateString(undefined, opts);
     }
 
-    function monthLinkFor(date) {
+    function monthLinkFor(date, baseLink) {
       const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
                           "Jul","Aug","Sep","Oct","Nov","Dec"];
       return {
         label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
-        url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getFullYear()}`
+        url: `${baseLink}%20${monthNames[date.getMonth()]}%20${date.getFullYear()}`
       };
     }
 
-    function dayLinkFor(date) {
+    function dayLinkFor(date, baseLink) {
       const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
                           "Jul","Aug","Sep","Oct","Nov","Dec"];
       return {
         label: formatDate(date),
-        url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getDate()}%20${date.getFullYear()}`
+        url: `${baseLink}%20${monthNames[date.getMonth()]}%20${date.getDate()}%20${date.getFullYear()}`
       };
+    }
+
+    function buildLinks(baseLink, parallelDate) {
+      const weekBefore = new Date(parallelDate);
+      weekBefore.setDate(parallelDate.getDate() - 7);
+      const weekAfter = new Date(parallelDate);
+      weekAfter.setDate(parallelDate.getDate() + 7);
+
+      const links = [monthLinkFor(parallelDate, baseLink)];
+      if (weekBefore.getMonth() !== parallelDate.getMonth() || weekBefore.getFullYear() !== parallelDate.getFullYear()) {
+        links.push(monthLinkFor(weekBefore, baseLink));
+      }
+      if (weekAfter.getMonth() !== parallelDate.getMonth() || weekAfter.getFullYear() !== parallelDate.getFullYear()) {
+        links.push(monthLinkFor(weekAfter, baseLink));
+      }
+
+      const exactDay = dayLinkFor(parallelDate, baseLink);
+
+      return `
+        <div class="links">
+          <a href="${exactDay.url}" target="_blank">📸 ${exactDay.label}</a>
+          ${links.map(l => `<a href="${l.url}" target="_blank">📅 ${l.label}</a>`).join("")}
+        </div>
+      `;
     }
 
     function calculate() {
@@ -95,30 +124,37 @@
         age.months > 0 ? `${age.months}mo` : ""
       ].filter(Boolean).join(" ");
 
-      const weekBefore = new Date(parallelDate);
-      weekBefore.setDate(parallelDate.getDate() - 7);
-      const weekAfter = new Date(parallelDate);
-      weekAfter.setDate(parallelDate.getDate() + 7);
-
-      const links = [monthLinkFor(parallelDate)];
-      if (weekBefore.getMonth() !== parallelDate.getMonth() || weekBefore.getFullYear() !== parallelDate.getFullYear()) {
-        links.push(monthLinkFor(weekBefore));
-      }
-      if (weekAfter.getMonth() !== parallelDate.getMonth() || weekAfter.getFullYear() !== parallelDate.getFullYear()) {
-        links.push(monthLinkFor(weekAfter));
-      }
-
-      const exactDay = dayLinkFor(parallelDate);
-
-      const linkHtml = [
-        `<a href="${exactDay.url}" target="_blank">📸 ${exactDay.label}</a>`,
-        ...links.map(l => `<a href="${l.url}" target="_blank">📅 ${l.label}</a>`)
-      ].join("");
-
       document.getElementById("result").innerHTML =
         `<div><span class="norah">Norah</span> is ${ageStr} old today.</div>
-         <div><span class="cameron">Cameron</span> was this age around ${formatDate(parallelDate)}.</div>
-         <div class="links">${linkHtml}</div>`;
+         <div><span class="cameron">Cameron</span> was this age around ${formatDate(parallelDate)}.</div>`;
+
+      // Device detection
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const albumDiv = document.getElementById("album-links");
+
+      if (/android/i.test(ua)) {
+        albumDiv.innerHTML = `
+          <div class="album-group">
+            <h3>Aaron's Album</h3>
+            ${buildLinks(aaronsAlbum, parallelDate)}
+          </div>`;
+      } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        albumDiv.innerHTML = `
+          <div class="album-group">
+            <h3>Kristin's Album</h3>
+            ${buildLinks(kristinsAlbum, parallelDate)}
+          </div>`;
+      } else {
+        albumDiv.innerHTML = `
+          <div class="album-group">
+            <h3>Aaron's Album</h3>
+            ${buildLinks(aaronsAlbum, parallelDate)}
+          </div>
+          <div class="album-group">
+            <h3>Kristin's Album</h3>
+            ${buildLinks(kristinsAlbum, parallelDate)}
+          </div>`;
+      }
     }
 
     window.onload = calculate;
