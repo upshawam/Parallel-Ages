@@ -54,9 +54,9 @@
     const cameronBirth = new Date("2022-03-18");
     const norahBirth = new Date("2024-01-19");
 
-    // Album base links
-    const aaronsAlbum = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwUFh6VlZVOHJDRTdKR2tJSkpNVlktSXFrYXUyNmI5bjZnKOyhiNijMw%3D%3D";
-    const kristinsAlbum = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwTXBEUkJwWGVVMUpzWHJfMHZtRFZCN3RPc2Z4T1U4ZmFZKOeE3dejMw%3D%3D";
+    // Album base links (face cluster for day links)
+    const aaronsFaceLink = "https://photos.google.com/YOUR_AARON_FACE_LINK";
+    const kristinsFaceLink = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwTXBEUkJwWGVVMUpzWHJfMHZtRFZCN3RPc2Z4T1U4ZmFZKOeE3dejMw%3D%3D";
 
     function calculateAgeYrMo(birth, today) {
       let years = today.getFullYear() - birth.getFullYear();
@@ -71,12 +71,13 @@
       return d.toLocaleDateString(undefined, opts);
     }
 
-    function monthLinkFor(date, baseLink) {
+    function monthLinkFor(date) {
       const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
                           "Jul","Aug","Sep","Oct","Nov","Dec"];
+      // Month-only search (no face token)
       return {
         label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
-        url: `${baseLink}%20${monthNames[date.getMonth()]}%20${date.getFullYear()}`
+        url: `https://photos.google.com/search/${monthNames[date.getMonth()]}%20${date.getFullYear()}`
       };
     }
 
@@ -89,26 +90,28 @@
       };
     }
 
-    function buildLinks(baseLink, parallelDate) {
+    function buildLinks(faceLink, parallelDate) {
       const weekBefore = new Date(parallelDate);
       weekBefore.setDate(parallelDate.getDate() - 7);
       const weekAfter = new Date(parallelDate);
       weekAfter.setDate(parallelDate.getDate() + 7);
 
-      const links = [monthLinkFor(parallelDate, baseLink)];
+      // Month links (no face filter)
+      const months = [monthLinkFor(parallelDate)];
       if (weekBefore.getMonth() !== parallelDate.getMonth() || weekBefore.getFullYear() !== parallelDate.getFullYear()) {
-        links.push(monthLinkFor(weekBefore, baseLink));
+        months.push(monthLinkFor(weekBefore));
       }
       if (weekAfter.getMonth() !== parallelDate.getMonth() || weekAfter.getFullYear() !== parallelDate.getFullYear()) {
-        links.push(monthLinkFor(weekAfter, baseLink));
+        months.push(monthLinkFor(weekAfter));
       }
 
-      const exactDay = dayLinkFor(parallelDate, baseLink);
+      // Exact day link (face filter)
+      const exactDay = dayLinkFor(parallelDate, faceLink);
 
       return `
         <div class="links">
           <a href="${exactDay.url}" target="_blank">📸 ${exactDay.label}</a>
-          ${links.map(l => `<a href="${l.url}" target="_blank">📅 ${l.label}</a>`).join("")}
+          ${months.map(m => `<a href="${m.url}" target="_blank">📅 ${m.label} (all photos)</a>`).join("")}
         </div>
       `;
     }
@@ -136,23 +139,23 @@
         albumDiv.innerHTML = `
           <div class="album-group">
             <h3>Aaron's Album</h3>
-            ${buildLinks(aaronsAlbum, parallelDate)}
+            ${buildLinks(aaronsFaceLink, parallelDate)}
           </div>`;
       } else if (/iPhone|iPad|iPod/i.test(ua)) {
         albumDiv.innerHTML = `
           <div class="album-group">
             <h3>Kristin's Album</h3>
-            ${buildLinks(kristinsAlbum, parallelDate)}
+            ${buildLinks(kristinsFaceLink, parallelDate)}
           </div>`;
       } else {
         albumDiv.innerHTML = `
           <div class="album-group">
             <h3>Aaron's Album</h3>
-            ${buildLinks(aaronsAlbum, parallelDate)}
+            ${buildLinks(aaronsFaceLink, parallelDate)}
           </div>
           <div class="album-group">
             <h3>Kristin's Album</h3>
-            ${buildLinks(kristinsAlbum, parallelDate)}
+            ${buildLinks(kristinsFaceLink, parallelDate)}
           </div>`;
       }
     }
