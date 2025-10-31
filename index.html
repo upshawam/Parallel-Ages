@@ -67,6 +67,15 @@
       };
     }
 
+    function dayLinkFor(date) {
+      const monthNames = ["January","February","March","April","May","June",
+                          "July","August","September","October","November","December"];
+      return {
+        label: formatDate(date),
+        url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getDate()}%20${date.getFullYear()}`
+      };
+    }
+
     function calculate() {
       const today = new Date();
       const ageDays = Math.floor((today - norahBirth) / (1000*60*60*24));
@@ -96,7 +105,13 @@
         links.push(monthLinkFor(weekAfter));
       }
 
-      const linkHtml = links.map(l => `<a href="${l.url}" target="_blank">📅 Cameron’s photos in ${l.label}</a>`).join("");
+      // Add exact day link
+      const exactDay = dayLinkFor(parallelDate);
+
+      const linkHtml = [
+        `<a href="${exactDay.url}" target="_blank">📸 Cameron’s photos on ${exactDay.label}</a>`,
+        ...links.map(l => `<a href="${l.url}" target="_blank">📅 Cameron’s photos in ${l.label}</a>`)
+      ].join("");
 
       document.getElementById("result").innerHTML =
         `<div><span class="norah">Norah</span> is ${ageStr} old today.</div>
