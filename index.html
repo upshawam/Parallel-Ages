@@ -13,21 +13,29 @@
       color: #222;
     }
     .result {
-      font-size: 1.25em;
-      line-height: 1.6;
+      font-size: 1.2em;
+      line-height: 1.5;
     }
-    .norah { font-weight: bold; color: #d63384; }
-    .cameron { font-weight: bold; color: #2a6fdb; }
+    .norah, .cameron {
+      font-weight: bold;
+      padding-right: 0.3em;
+      letter-spacing: 0.5px;
+    }
+    .norah { color: #d63384; }
+    .cameron { color: #2a6fdb; }
     .links {
       margin-top: 1em;
       display: flex;
       flex-direction: column;
-      gap: 0.5em;
+      gap: 0.4em;
     }
     a {
       color: #2a6fdb;
       text-decoration: none;
-      font-size: 1.1em;
+      font-size: 1em;
+      white-space: nowrap; /* prevent wrapping */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     a:hover { text-decoration: underline; }
     @media (min-width: 600px) {
@@ -59,8 +67,8 @@
     }
 
     function monthLinkFor(date) {
-      const monthNames = ["January","February","March","April","May","June",
-                          "July","August","September","October","November","December"];
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec"];
       return {
         label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
         url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getFullYear()}`
@@ -68,8 +76,8 @@
     }
 
     function dayLinkFor(date) {
-      const monthNames = ["January","February","March","April","May","June",
-                          "July","August","September","October","November","December"];
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec"];
       return {
         label: formatDate(date),
         url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getDate()}%20${date.getFullYear()}`
@@ -92,31 +100,24 @@
       const weekAfter = new Date(parallelDate);
       weekAfter.setDate(parallelDate.getDate() + 7);
 
-      // Always include the parallel date's month
       const links = [monthLinkFor(parallelDate)];
-
-      // Add previous month if range crosses back
       if (weekBefore.getMonth() !== parallelDate.getMonth() || weekBefore.getFullYear() !== parallelDate.getFullYear()) {
         links.push(monthLinkFor(weekBefore));
       }
-
-      // Add next month if range crosses forward
       if (weekAfter.getMonth() !== parallelDate.getMonth() || weekAfter.getFullYear() !== parallelDate.getFullYear()) {
         links.push(monthLinkFor(weekAfter));
       }
 
-      // Add exact day link
       const exactDay = dayLinkFor(parallelDate);
 
       const linkHtml = [
-        `<a href="${exactDay.url}" target="_blank">📸 Cameron’s photos on ${exactDay.label}</a>`,
-        ...links.map(l => `<a href="${l.url}" target="_blank">📅 Cameron’s photos in ${l.label}</a>`)
+        `<a href="${exactDay.url}" target="_blank">📸 ${exactDay.label}</a>`,
+        ...links.map(l => `<a href="${l.url}" target="_blank">📅 ${l.label}</a>`)
       ].join("");
 
       document.getElementById("result").innerHTML =
         `<div><span class="norah">Norah</span> is ${ageStr} old today.</div>
          <div><span class="cameron">Cameron</span> was this age around ${formatDate(parallelDate)}.</div>
-         <div>Browse Cameron’s photos from <b>${formatDate(weekBefore)}</b> to <b>${formatDate(weekAfter)}</b>.</div>
          <div class="links">${linkHtml}</div>`;
     }
 
