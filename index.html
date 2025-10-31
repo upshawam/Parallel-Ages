@@ -3,37 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <title>Parallel Ages</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: "Helvetica Neue", Arial, sans-serif;
-      margin: 1em;
-      padding: 0;
+      margin: 0;
+      padding: 1em;
       background: #fff;
       color: #222;
     }
     .result {
-      font-size: 1.1em;
+      font-size: 1.25em;
       line-height: 1.6;
-      max-width: 90%;
     }
-    .norah {
-      font-weight: bold;
-      color: #d63384; /* purple/pink */
-    }
-    .cameron {
-      font-weight: bold;
-      color: #2a6fdb; /* blue */
+    .norah { font-weight: bold; color: #d63384; }
+    .cameron { font-weight: bold; color: #2a6fdb; }
+    .links {
+      margin-top: 1em;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
     }
     a {
       color: #2a6fdb;
       text-decoration: none;
+      font-size: 1.1em;
     }
-    a:hover {
-      text-decoration: underline;
-    }
-    @media (max-width: 600px) {
-      body { font-size: 1em; }
-      .result { max-width: 100%; }
+    a:hover { text-decoration: underline; }
+    @media (min-width: 600px) {
+      .result { font-size: 1.1em; }
+      a { font-size: 1em; }
     }
   </style>
 </head>
@@ -44,18 +43,28 @@
     const cameronBirth = new Date("2022-03-18");
     const norahBirth = new Date("2024-01-19");
 
+    const basePersonLink = "https://photos.google.com/search/CgdDYW1lcm9uIjESLwotCisKKRInQUYxUWlwUFh6VlZVOHJDRTdKR2tJSkpNVlktSXFrYXUyNmI5bjZnKMK8ydajMw%3D%3D";
+
     function calculateAgeYrMo(birth, today) {
       let years = today.getFullYear() - birth.getFullYear();
       let months = today.getMonth() - birth.getMonth();
-
-      if (today.getDate() < birth.getDate()) {
-        months -= 1;
-      }
-      if (months < 0) {
-        years -= 1;
-        months += 12;
-      }
+      if (today.getDate() < birth.getDate()) months -= 1;
+      if (months < 0) { years -= 1; months += 12; }
       return { years, months };
+    }
+
+    function formatDate(d) {
+      const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+      return d.toLocaleDateString(undefined, opts);
+    }
+
+    function monthLinkFor(date) {
+      const monthNames = ["January","February","March","April","May","June",
+                          "July","August","September","October","November","December"];
+      return {
+        label: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+        url: `${basePersonLink}%20${monthNames[date.getMonth()]}%20${date.getFullYear()}`
+      };
     }
 
     function calculate() {
@@ -69,19 +78,31 @@
         age.months > 0 ? `${age.months}mo` : ""
       ].filter(Boolean).join(" ");
 
-      const monthNames = ["January","February","March","April","May","June",
-                          "July","August","September","October","November","December"];
+      const weekBefore = new Date(parallelDate);
+      weekBefore.setDate(parallelDate.getDate() - 7);
+      const weekAfter = new Date(parallelDate);
+      weekAfter.setDate(parallelDate.getDate() + 7);
 
-      const monthLink = `https://photos.google.com/search/${monthNames[parallelDate.getMonth()]}%20${parallelDate.getFullYear()}`;
-      const dayLink = `https://photos.google.com/search/${monthNames[parallelDate.getMonth()]}%20${parallelDate.getDate()}%20${parallelDate.getFullYear()}`;
+      // Always include the parallel date's month
+      const links = [monthLinkFor(parallelDate)];
+
+      // Add previous month if range crosses back
+      if (weekBefore.getMonth() !== parallelDate.getMonth() || weekBefore.getFullYear() !== parallelDate.getFullYear()) {
+        links.push(monthLinkFor(weekBefore));
+      }
+
+      // Add next month if range crosses forward
+      if (weekAfter.getMonth() !== parallelDate.getMonth() || weekAfter.getFullYear() !== parallelDate.getFullYear()) {
+        links.push(monthLinkFor(weekAfter));
+      }
+
+      const linkHtml = links.map(l => `<a href="${l.url}" target="_blank">📅 Cameron’s photos in ${l.label}</a>`).join("");
 
       document.getElementById("result").innerHTML =
         `<div><span class="norah">Norah</span> is ${ageStr} old today.</div>
-         <div><span class="cameron">Cameron</span> was this age on ${parallelDate.toDateString()}.</div>
-         <div style="margin-top:0.5em;">
-           <a href="${monthLink}" target="_blank">Open month in Google Photos</a> | 
-           <a href="${dayLink}" target="_blank">Open exact day</a>
-         </div>`;
+         <div><span class="cameron">Cameron</span> was this age around ${formatDate(parallelDate)}.</div>
+         <div>Browse Cameron’s photos from <b>${formatDate(weekBefore)}</b> to <b>${formatDate(weekAfter)}</b>.</div>
+         <div class="links">${linkHtml}</div>`;
     }
 
     window.onload = calculate;
